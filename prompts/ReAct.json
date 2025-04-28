@@ -1,0 +1,5 @@
+{
+    "family": "ReAct",
+    "template": "{input}\nThought: I should do some calculation.\nAction: Compute[<expression>]\nObservation: <result>\n…\nThought: I have my answer."
+  }
+  

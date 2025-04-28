@@ -1,0 +1,8 @@
+openai
+bitsandbytes
+transformers
+datasets
+numpy
+pandas
+scipy
+tqdm

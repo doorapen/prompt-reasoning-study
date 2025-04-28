@@ -1,0 +1,5 @@
+{
+    "family": "SelfReflection",
+    "template": "{input}\nLet's think step by step.\nIs your answer correct? Why?"
+  }
+  

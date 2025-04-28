@@ -1,0 +1,5 @@
+{
+    "family": "FewShot",
+    "template": "Q: … A: …\nQ: … A: …\nQ: … A: …\n{input}"
+  }
+  

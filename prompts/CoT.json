@@ -1,0 +1,5 @@
+{
+    "family": "CoT",
+    "template": "{input}\nLet's think step by step."
+  }
+  
