@@ -1,0 +1,25 @@
+name: prompt-reasoning            # this is the env Conda will create
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+      - openai==1.28.0
+      - tiktoken
+      - transformers>=4.40
+      - accelerate
+      - bitsandbytes
+      - datasets
+      - evaluate
+      - scipy
+      - statsmodels
+      - seaborn
+      - matplotlib
+      - black
+      - flake8
+      - isort
+      - pre-commit
+      - pytest
+      - mypy           # optional typing check 

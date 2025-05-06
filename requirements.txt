@@ -6,3 +6,11 @@ numpy
 pandas
 scipy
 tqdm
+pre-commit
+black
+flake8
+isort
+matplotlib
+seaborn
+torch
+statsmodels
