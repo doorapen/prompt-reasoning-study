@@ -46,11 +46,14 @@ def plot_accuracy_comparison(
     
     # Create the plot
     plt.figure(figsize=(10, 6))
+    
     bar_plot = sns.barplot(
         x="Prompt Type", 
         y="Accuracy", 
+        hue="Prompt Type",
         data=df,
-        palette="viridis"
+        palette="viridis",
+        legend=False
     )
     
     # Add value labels on top of bars
@@ -208,14 +211,25 @@ def plot_rationale_length(
     # Create the plot
     plt.figure(figsize=(12, 8))
     
-    # Box plot of rationale length by prompt type and correctness
-    sns.boxplot(
-        x="Prompt Type",
-        y="Reasoning Length",
-        hue="Correct" if "Yes" in df["Correct"].values and "No" in df["Correct"].values else None,
-        data=df,
-        palette=["#FF9999", "#66B2FF"]
-    )
+    # Check if we have both correct and incorrect examples
+    has_both_outcomes = "Yes" in df["Correct"].values and "No" in df["Correct"].values
+    
+    # Fix: Only use hue if we have both correct and incorrect examples
+    if has_both_outcomes:
+        sns.boxplot(
+            x="Prompt Type",
+            y="Reasoning Length",
+            hue="Correct",
+            data=df,
+            palette=["#FF9999", "#66B2FF"]
+        )
+    else:
+        # If we only have one outcome, don't use hue
+        sns.boxplot(
+            x="Prompt Type",
+            y="Reasoning Length",
+            data=df
+        )
     
     # Formatting
     plt.title(f"Reasoning Length by Prompt Type and Correctness ({model_name} on {dataset_name})")

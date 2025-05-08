@@ -1,0 +1,107 @@
+[
+  {
+    "id": "gsm8k_test_0",
+    "question": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+    "true_answer": "18",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: First, I need to determine how many eggs Janet has left to sell after she uses some for breakfast and baking. She starts with 16 eggs each day.\n\nAction: Compute[16 - 3 - 4]\n\nThought: Janet uses 3 eggs for breakfast and 4 eggs for baking, which totals 7 eggs. Subtracting these from the 16 eggs laid each day will give the number of eggs she has left to sell.\n\nAction: Compute[16 - 7]\n\nThought: Janet has 9 eggs left to sell at the farmers' market each day. Each egg is sold for $2.\n\nAction: Compute[9 * 2]\n\nThought: By multiplying the number of eggs she sells by the price per egg, I can find out how much money she makes each day at the farmers' market.\n\nAnswer: Janet makes $18 every day at the farmers' market.",
+    "thoughts": [
+      "First, I need to determine how many eggs Janet has left to sell after she uses some for breakfast and baking. She starts with 16 eggs each day.",
+      "Janet uses 3 eggs for breakfast and 4 eggs for baking, which totals 7 eggs. Subtracting these from the 16 eggs laid each day will give the number of eggs she has left to sell.",
+      "Janet has 9 eggs left to sell at the farmers' market each day. Each egg is sold for $2.",
+      "By multiplying the number of eggs she sells by the price per egg, I can find out how much money she makes each day at the farmers' market."
+    ],
+    "actions": [
+      "16 - 3 - 4",
+      "16 - 7",
+      "9 * 2"
+    ],
+    "answer": "Janet makes $18 every day at the farmers' market."
+  },
+  {
+    "id": "gsm8k_test_1",
+    "question": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+    "true_answer": "3",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: We need to determine the total number of bolts required to make a robe. We know that a robe requires 2 bolts of blue fiber and half that amount of white fiber. First, we should calculate how many bolts of white fiber are needed.\n\nThought: Since the robe requires half as much white fiber as blue fiber, we need to calculate half of 2 bolts.\n\nAction: Compute[2 / 2]\n\nThought: The result of the computation will give us the number of bolts of white fiber needed.\n\nAction: Compute[2 / 2 = 1]\n\nThought: Now that we know the robe requires 2 bolts of blue fiber and 1 bolt of white fiber, we can add these together to find the total number of bolts needed.\n\nAction: Compute[2 + 1]\n\nThought: The result of this computation will give us the total number of bolts required to make the robe.\n\nAction: Compute[2 + 1 = 3]\n\nAnswer: 3 bolts in total are needed to make the robe.",
+    "thoughts": [
+      "We need to determine the total number of bolts required to make a robe. We know that a robe requires 2 bolts of blue fiber and half that amount of white fiber. First, we should calculate how many bolts of white fiber are needed.",
+      "Since the robe requires half as much white fiber as blue fiber, we need to calculate half of 2 bolts.",
+      "The result of the computation will give us the number of bolts of white fiber needed.",
+      "Now that we know the robe requires 2 bolts of blue fiber and 1 bolt of white fiber, we can add these together to find the total number of bolts needed.",
+      "The result of this computation will give us the total number of bolts required to make the robe."
+    ],
+    "actions": [
+      "2 / 2",
+      "2 / 2 = 1",
+      "2 + 1",
+      "2 + 1 = 3"
+    ],
+    "answer": "3 bolts in total are needed to make the robe."
+  },
+  {
+    "id": "gsm8k_test_2",
+    "question": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+    "true_answer": "70000",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: To determine the profit Josh made, we need to calculate the final value of the house after the repairs and then subtract the total costs (purchase price and repair costs) from this final value. First, let's calculate the increased value of the house.\n\nAction: Compute[80,000 + 50,000]\n\nThought: The total cost of the house, including repairs, is $130,000. Now, let's calculate the increased value of the house by 150%.\n\nAction: Compute[130,000 * 1.5]\n\nThought: The value of the house after the increase is $195,000. Now, we need to calculate the profit by subtracting the total costs from the final value.\n\nAction: Compute[195,000 - 130,000]\n\nAnswer: Josh made a profit of $65,000.",
+    "thoughts": [
+      "To determine the profit Josh made, we need to calculate the final value of the house after the repairs and then subtract the total costs (purchase price and repair costs) from this final value. First, let's calculate the increased value of the house.",
+      "The total cost of the house, including repairs, is $130,000. Now, let's calculate the increased value of the house by 150%.",
+      "The value of the house after the increase is $195,000. Now, we need to calculate the profit by subtracting the total costs from the final value."
+    ],
+    "actions": [
+      "80,000 + 50,000",
+      "130,000 * 1.5",
+      "195,000 - 130,000"
+    ],
+    "answer": "Josh made a profit of $65,000."
+  },
+  {
+    "id": "gsm8k_test_3",
+    "question": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meters does he run a week?",
+    "true_answer": "540",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: To find the total meters James runs in a week, we need to calculate the total distance he runs in one session and then multiply it by the number of sessions per week.\n\nAction: Compute[60 meters/sprint * 3 sprints/session]\n\nThought: Now that we have the total distance for one session, we need to calculate the total distance for the entire week by multiplying the result by the number of sessions per week.\n\nAction: Compute[180 meters/session * 3 sessions/week]\n\nAnswer: 540 meters\n\nJames runs a total of 540 meters in a week.",
+    "thoughts": [
+      "To find the total meters James runs in a week, we need to calculate the total distance he runs in one session and then multiply it by the number of sessions per week.",
+      "Now that we have the total distance for one session, we need to calculate the total distance for the entire week by multiplying the result by the number of sessions per week."
+    ],
+    "actions": [
+      "60 meters/sprint * 3 sprints/session",
+      "180 meters/session * 3 sessions/week"
+    ],
+    "answer": "540 meters"
+  },
+  {
+    "id": "gsm8k_test_4",
+    "question": "Every day, Wendi feeds each of her chickens three cups of mixed chicken feed, containing seeds, mealworms and vegetables to help keep them healthy.  She gives the chickens their feed in three separate meals. In the morning, she gives her flock of chickens 15 cups of feed.  In the afternoon, she gives her chickens another 25 cups of feed.  How many cups of feed does she need to give her chickens in the final meal of the day if the size of Wendi's flock is 20 chickens?",
+    "true_answer": "20",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: We need to determine the total amount of feed Wendi gives to her chickens each day and then find out how much feed is needed for the final meal. We know that each chicken receives three cups of feed per day, and there are 20 chickens in the flock.\n\nAction: Compute[3 cups/chicken * 20 chickens]\n\nThought: This will give us the total amount of feed needed for all the chickens in one day.\n\nAction: Compute[3 * 20]\n\nThought: The result of this calculation will tell us the total cups of feed needed per day.\n\nAction: Compute[60]\n\nThought: Wendi gives 15 cups of feed in the morning and 25 cups in the afternoon. We need to find out how much feed is left for the final meal.\n\nAction: Compute[15 + 25]\n\nThought: This will give us the total amount of feed given in the morning and afternoon.\n\nAction: Compute[40]\n\nThought: Now, we subtract the total feed given in the morning and afternoon from the total daily feed requirement to find out how much feed is needed for the final meal.\n\nAction: Compute[60 - 40]\n\nThought: This calculation will give us the amount of feed needed for the final meal.\n\nAction: Compute[20]\n\nAnswer: Wendi needs to give her chickens 20 cups of feed in the final meal of the day.",
+    "thoughts": [
+      "We need to determine the total amount of feed Wendi gives to her chickens each day and then find out how much feed is needed for the final meal. We know that each chicken receives three cups of feed per day, and there are 20 chickens in the flock.",
+      "This will give us the total amount of feed needed for all the chickens in one day.",
+      "The result of this calculation will tell us the total cups of feed needed per day.",
+      "Wendi gives 15 cups of feed in the morning and 25 cups in the afternoon. We need to find out how much feed is left for the final meal.",
+      "This will give us the total amount of feed given in the morning and afternoon.",
+      "Now, we subtract the total feed given in the morning and afternoon from the total daily feed requirement to find out how much feed is needed for the final meal.",
+      "This calculation will give us the amount of feed needed for the final meal."
+    ],
+    "actions": [
+      "3 cups/chicken * 20 chickens",
+      "3 * 20",
+      "60",
+      "15 + 25",
+      "40",
+      "60 - 40",
+      "20"
+    ],
+    "answer": "Wendi needs to give her chickens 20 cups of feed in the final meal of the day."
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "id": "gsm8k_test_0",
+    "question": "Janet\u2019s ducks lay 16 eggs per day. She eats three for breakfast every morning and bakes muffins for her friends every day with four. She sells the remainder at the farmers' market daily for $2 per fresh duck egg. How much in dollars does she make every day at the farmers' market?",
+    "true_answer": "18",
+    "prompt_type": "zero_shot",
+    "model": "gpt-4o",
+    "raw_output": "Janet's ducks lay 16 eggs per day. She uses 3 eggs for breakfast and 4 eggs for baking muffins, which totals to 7 eggs used daily. \n\nThe number of eggs she has left to sell is:\n\\[ 16 - 7 = 9 \\text{ eggs} \\]\n\nShe sells each egg for $2, so the amount she makes from selling the eggs is:\n\\[ 9 \\times 2 = 18 \\text{ dollars} \\]\n\nTherefore, Janet makes $18 every day at the farmers' market.",
+    "answer": "Janet's ducks lay 16 eggs per day. She uses 3 eggs for breakfast and 4 eggs for baking muffins, which totals to 7 eggs used daily. \n\nThe number of eggs she has left to sell is:\n\\[ 16 - 7 = 9 \\text{ eggs} \\]\n\nShe sells each egg for $2, so the amount she makes from selling the eggs is:\n\\[ 9 \\times 2 = 18 \\text{ dollars} \\]\n\nTherefore, Janet makes $18 every day at the farmers' market."
+  },
+  {
+    "id": "gsm8k_test_1",
+    "question": "A robe takes 2 bolts of blue fiber and half that much white fiber.  How many bolts in total does it take?",
+    "true_answer": "3",
+    "prompt_type": "zero_shot",
+    "model": "gpt-4o",
+    "raw_output": "To determine the total number of bolts required to make a robe, we need to add the bolts of blue fiber and the bolts of white fiber.\n\nThe robe requires:\n- 2 bolts of blue fiber\n- Half of 2 bolts of white fiber, which is \\( \\frac{1}{2} \\times 2 = 1 \\) bolt of white fiber\n\nAdding these together gives:\n\\[ 2 \\text{ bolts of blue fiber} + 1 \\text{ bolt of white fiber} = 3 \\text{ bolts in total} \\]\n\nTherefore, it takes a total of 3 bolts to make the robe.",
+    "answer": "To determine the total number of bolts required to make a robe, we need to add the bolts of blue fiber and the bolts of white fiber.\n\nThe robe requires:\n- 2 bolts of blue fiber\n- Half of 2 bolts of white fiber, which is \\( \\frac{1}{2} \\times 2 = 1 \\) bolt of white fiber\n\nAdding these together gives:\n\\[ 2 \\text{ bolts of blue fiber} + 1 \\text{ bolt of white fiber} = 3 \\text{ bolts in total} \\]\n\nTherefore, it takes a total of 3 bolts to make the robe."
+  },
+  {
+    "id": "gsm8k_test_2",
+    "question": "Josh decides to try flipping a house.  He buys a house for $80,000 and then puts in $50,000 in repairs.  This increased the value of the house by 150%.  How much profit did he make?",
+    "true_answer": "70000",
+    "prompt_type": "zero_shot",
+    "model": "gpt-4o",
+    "raw_output": "To determine the profit Josh made from flipping the house, we need to follow these steps:\n\n1. **Calculate the Total Investment:**\n   - Purchase price of the house: $80,000\n   - Cost of repairs: $50,000\n   - Total investment = $80,000 + $50,000 = $130,000\n\n2. **Calculate the Increased Value of the House:**\n   - The value of the house increased by 150%.\n   - Original value of the house (after repairs) = $80,000 + $50,000 = $130,000\n   - Increase in value = 150% of $130,000 = 1.5 \u00d7 $130,000 = $195,000\n\n3. **Calculate the New Value of the House:**\n   - New value of the house = Original value + Increase in value\n   - New value = $130,000 + $195,000 = $325,000\n\n4. **Calculate the Profit:**\n   - Profit = New value of the house - Total investment\n   - Profit = $325,000 - $130,000 = $195,000\n\nTherefore, Josh made a profit of $195,000 from flipping the house.",
+    "answer": "To determine the profit Josh made from flipping the house, we need to follow these steps:\n\n1. **Calculate the Total Investment:**\n   - Purchase price of the house: $80,000\n   - Cost of repairs: $50,000\n   - Total investment = $80,000 + $50,000 = $130,000\n\n2. **Calculate the Increased Value of the House:**\n   - The value of the house increased by 150%.\n   - Original value of the house (after repairs) = $80,000 + $50,000 = $130,000\n   - Increase in value = 150% of $130,000 = 1.5 \u00d7 $130,000 = $195,000\n\n3. **Calculate the New Value of the House:**\n   - New value of the house = Original value + Increase in value\n   - New value = $130,000 + $195,000 = $325,000\n\n4. **Calculate the Profit:**\n   - Profit = New value of the house - Total investment\n   - Profit = $325,000 - $130,000 = $195,000\n\nTherefore, Josh made a profit of $195,000 from flipping the house."
+  },
+  {
+    "id": "gsm8k_test_3",
+    "question": "James decides to run 3 sprints 3 times a week.  He runs 60 meters each sprint.  How many total meters does he run a week?",
+    "true_answer": "540",
+    "prompt_type": "zero_shot",
+    "model": "gpt-4o",
+    "raw_output": "To find out how many total meters James runs in a week, we need to calculate the total distance he covers in each session and then multiply that by the number of sessions per week.\n\nFirst, calculate the total distance for one session:\n- James runs 3 sprints per session.\n- Each sprint is 60 meters.\n\nSo, for one session, he runs:\n\\[ 3 \\text{ sprints} \\times 60 \\text{ meters/sprint} = 180 \\text{ meters} \\]\n\nNext, calculate the total distance for the week:\n- James runs 3 times a week.\n\nSo, for the week, he runs:\n\\[ 3 \\text{ sessions/week} \\times 180 \\text{ meters/session} = 540 \\text{ meters/week} \\]\n\nTherefore, James runs a total of 540 meters each week.",
+    "answer": "To find out how many total meters James runs in a week, we need to calculate the total distance he covers in each session and then multiply that by the number of sessions per week.\n\nFirst, calculate the total distance for one session:\n- James runs 3 sprints per session.\n- Each sprint is 60 meters.\n\nSo, for one session, he runs:\n\\[ 3 \\text{ sprints} \\times 60 \\text{ meters/sprint} = 180 \\text{ meters} \\]\n\nNext, calculate the total distance for the week:\n- James runs 3 times a week.\n\nSo, for the week, he runs:\n\\[ 3 \\text{ sessions/week} \\times 180 \\text{ meters/session} = 540 \\text{ meters/week} \\]\n\nTherefore, James runs a total of 540 meters each week."
+  },
+  {
+    "id": "gsm8k_test_4",
+    "question": "Every day, Wendi feeds each of her chickens three cups of mixed chicken feed, containing seeds, mealworms and vegetables to help keep them healthy.  She gives the chickens their feed in three separate meals. In the morning, she gives her flock of chickens 15 cups of feed.  In the afternoon, she gives her chickens another 25 cups of feed.  How many cups of feed does she need to give her chickens in the final meal of the day if the size of Wendi's flock is 20 chickens?",
+    "true_answer": "20",
+    "prompt_type": "zero_shot",
+    "model": "gpt-4o",
+    "raw_output": "To determine how many cups of feed Wendi needs to give her chickens in the final meal of the day, we first need to calculate the total amount of feed required for all 20 chickens in a day.\n\nEach chicken requires 3 cups of feed per day. Therefore, for 20 chickens, the total daily feed requirement is:\n\n\\[ 20 \\text{ chickens} \\times 3 \\text{ cups/chicken} = 60 \\text{ cups} \\]\n\nWendi gives her chickens 15 cups of feed in the morning and 25 cups in the afternoon. The total amount of feed given in the morning and afternoon is:\n\n\\[ 15 \\text{ cups} + 25 \\text{ cups} = 40 \\text{ cups} \\]\n\nTo find out how many cups of feed Wendi needs to give in the final meal, we subtract the amount already given from the total daily requirement:\n\n\\[ 60 \\text{ cups (total needed)} - 40 \\text{ cups (already given)} = 20 \\text{ cups} \\]\n\nTherefore, Wendi needs to give her chickens 20 cups of feed in the final meal of the day.",
+    "answer": "To determine how many cups of feed Wendi needs to give her chickens in the final meal of the day, we first need to calculate the total amount of feed required for all 20 chickens in a day.\n\nEach chicken requires 3 cups of feed per day. Therefore, for 20 chickens, the total daily feed requirement is:\n\n\\[ 20 \\text{ chickens} \\times 3 \\text{ cups/chicken} = 60 \\text{ cups} \\]\n\nWendi gives her chickens 15 cups of feed in the morning and 25 cups in the afternoon. The total amount of feed given in the morning and afternoon is:\n\n\\[ 15 \\text{ cups} + 25 \\text{ cups} = 40 \\text{ cups} \\]\n\nTo find out how many cups of feed Wendi needs to give in the final meal, we subtract the amount already given from the total daily requirement:\n\n\\[ 60 \\text{ cups (total needed)} - 40 \\text{ cups (already given)} = 20 \\text{ cups} \\]\n\nTherefore, Wendi needs to give her chickens 20 cups of feed in the final meal of the day."
+  }
+]

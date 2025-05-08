@@ -1,0 +1,104 @@
+[
+  {
+    "id": "gsm8k_test_40",
+    "question": "Brandon's iPhone is four times as old as Ben's iPhone. Ben's iPhone is two times older than Suzy's iPhone. If Suzy\u2019s iPhone is 1 year old, how old is Brandon\u2019s iPhone?",
+    "true_answer": "8",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: We need to determine the age of Brandon's iPhone based on the ages of Ben's and Suzy's iPhones. We know that Suzy's iPhone is 1 year old. Ben's iPhone is two times older than Suzy's iPhone, and Brandon's iPhone is four times as old as Ben's iPhone. Let's calculate the age of Ben's iPhone first.\n\nAction: Compute[2 * 1]\n\nThought: Ben's iPhone is 2 times older than Suzy's iPhone, which is 1 year old. So, Ben's iPhone is 2 years old. Now, let's calculate the age of Brandon's iPhone, which is four times as old as Ben's iPhone.\n\nAction: Compute[4 * 2]\n\nThought: Brandon's iPhone is 4 times as old as Ben's iPhone, which is 2 years old. Therefore, Brandon's iPhone is 8 years old.\n\nAnswer: Brandon's iPhone is 8 years old.",
+    "thoughts": [
+      "We need to determine the age of Brandon's iPhone based on the ages of Ben's and Suzy's iPhones. We know that Suzy's iPhone is 1 year old. Ben's iPhone is two times older than Suzy's iPhone, and Brandon's iPhone is four times as old as Ben's iPhone. Let's calculate the age of Ben's iPhone first.",
+      "Ben's iPhone is 2 times older than Suzy's iPhone, which is 1 year old. So, Ben's iPhone is 2 years old. Now, let's calculate the age of Brandon's iPhone, which is four times as old as Ben's iPhone.",
+      "Brandon's iPhone is 4 times as old as Ben's iPhone, which is 2 years old. Therefore, Brandon's iPhone is 8 years old."
+    ],
+    "actions": [
+      "2 * 1",
+      "4 * 2"
+    ],
+    "answer": "Brandon's iPhone is 8 years old."
+  },
+  {
+    "id": "gsm8k_test_41",
+    "question": "The great dragon, Perg, sat high atop mount Farbo, breathing fire upon anything within a distance of 1000 feet.  Polly could throw the gold javelin, the only known weapon that could sleigh the dragon, for a distance of 400 feet, well within the reach of the dragon's flames.  But when Polly held the sapphire gemstone, she could throw the javelin three times farther than when not holding the gemstone. If holding the gemstone, how far outside of the reach of the dragon's flames could Polly stand and still hit the dragon with the gold javelin?",
+    "true_answer": "200",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: We need to determine how far Polly can throw the gold javelin while holding the sapphire gemstone and then calculate how far outside the reach of the dragon's flames she can stand. \n\nFirst, let's calculate the distance Polly can throw the javelin while holding the gemstone. Without the gemstone, she can throw it 400 feet. With the gemstone, she can throw it three times farther.\n\nAction: Compute[400 * 3]\n\nThought: Now that we know how far Polly can throw the javelin with the gemstone, we need to determine how far outside the reach of the dragon's flames she can stand. The dragon's flames reach 1000 feet, so we need to subtract this distance from the distance Polly can throw the javelin.\n\nAction: Compute[1200 - 1000]\n\nAnswer: Polly can stand 200 feet outside the reach of the dragon's flames and still hit the dragon with the gold javelin while holding the sapphire gemstone.",
+    "thoughts": [
+      "We need to determine how far Polly can throw the gold javelin while holding the sapphire gemstone and then calculate how far outside the reach of the dragon's flames she can stand.",
+      "Now that we know how far Polly can throw the javelin with the gemstone, we need to determine how far outside the reach of the dragon's flames she can stand. The dragon's flames reach 1000 feet, so we need to subtract this distance from the distance Polly can throw the javelin."
+    ],
+    "actions": [
+      "400 * 3",
+      "1200 - 1000"
+    ],
+    "answer": "Polly can stand 200 feet outside the reach of the dragon's flames and still hit the dragon with the gold javelin while holding the sapphire gemstone."
+  },
+  {
+    "id": "gsm8k_test_42",
+    "question": "Grandma Jones baked 5 apple pies for the fireman's luncheon.  She cut each pie into 8 pieces and set the five pies out on the buffet table for the guests to serve themselves.  At the end of the evening, after the guests had taken and eaten their pieces of pie, there were 14 pieces of pie remaining.  How many pieces were taken by the guests?",
+    "true_answer": "26",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: First, we need to determine the total number of pieces of pie that Grandma Jones initially had. Since she baked 5 pies and each pie was cut into 8 pieces, we can calculate the total number of pieces.\n\nAction: Compute[5 pies * 8 pieces per pie]\n\nThought: Now that we know the total number of pieces, we can find out how many pieces were taken by subtracting the number of pieces remaining from the total number of pieces.\n\nAction: Compute[40 pieces - 14 pieces remaining]\n\nAnswer: 26 pieces were taken by the guests.",
+    "thoughts": [
+      "First, we need to determine the total number of pieces of pie that Grandma Jones initially had. Since she baked 5 pies and each pie was cut into 8 pieces, we can calculate the total number of pieces.",
+      "Now that we know the total number of pieces, we can find out how many pieces were taken by subtracting the number of pieces remaining from the total number of pieces."
+    ],
+    "actions": [
+      "5 pies * 8 pieces per pie",
+      "40 pieces - 14 pieces remaining"
+    ],
+    "answer": "26 pieces were taken by the guests."
+  },
+  {
+    "id": "gsm8k_test_43",
+    "question": "According to its nutritional info, a bag of chips has 250 calories per serving. If a 300g bag has 5 servings, how many grams can you eat if your daily calorie target is 2000 and you have already consumed 1800 calories?",
+    "true_answer": "48",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: First, we need to determine how many calories are in one serving of the chips. We know that each serving has 250 calories. Next, we need to find out how many calories are left in the daily target after consuming 1800 calories. Then, we can calculate how many servings of chips can be consumed with the remaining calories. Finally, we will convert the number of servings into grams.\n\nAction: Compute[2000 - 1800]\n\nThought: The result of this computation will give us the remaining calories available for consumption.\n\nAction: Compute[2000 - 1800 = 200]\n\nThought: There are 200 calories remaining in the daily target. Now, we need to determine how many servings of chips can be consumed with these 200 calories.\n\nAction: Compute[200 / 250]\n\nThought: This computation will give us the fraction of a serving that can be consumed with the remaining calories.\n\nAction: Compute[200 / 250 = 0.8]\n\nThought: We can consume 0.8 servings of chips. Now, we need to convert this fraction of a serving into grams. We know that the entire bag is 300g and contains 5 servings.\n\nAction: Compute[300 / 5]\n\nThought: This computation will give us the number of grams per serving.\n\nAction: Compute[300 / 5 = 60]\n\nThought: Each serving is 60 grams. Now, we need to calculate how many grams correspond to 0.8 servings.\n\nAction: Compute[0.8 * 60]\n\nThought: This computation will give us the number of grams that can be consumed with the remaining calories.\n\nAction: Compute[0.8 * 60 = 48]\n\nAnswer: You can eat 48 grams of chips.",
+    "thoughts": [
+      "First, we need to determine how many calories are in one serving of the chips. We know that each serving has 250 calories. Next, we need to find out how many calories are left in the daily target after consuming 1800 calories. Then, we can calculate how many servings of chips can be consumed with the remaining calories. Finally, we will convert the number of servings into grams.",
+      "The result of this computation will give us the remaining calories available for consumption.",
+      "There are 200 calories remaining in the daily target. Now, we need to determine how many servings of chips can be consumed with these 200 calories.",
+      "This computation will give us the fraction of a serving that can be consumed with the remaining calories.",
+      "We can consume 0.8 servings of chips. Now, we need to convert this fraction of a serving into grams. We know that the entire bag is 300g and contains 5 servings.",
+      "This computation will give us the number of grams per serving.",
+      "Each serving is 60 grams. Now, we need to calculate how many grams correspond to 0.8 servings.",
+      "This computation will give us the number of grams that can be consumed with the remaining calories."
+    ],
+    "actions": [
+      "2000 - 1800",
+      "2000 - 1800 = 200",
+      "200 / 250",
+      "200 / 250 = 0.8",
+      "300 / 5",
+      "300 / 5 = 60",
+      "0.8 * 60",
+      "0.8 * 60 = 48"
+    ],
+    "answer": "You can eat 48 grams of chips."
+  },
+  {
+    "id": "gsm8k_test_44",
+    "question": "Charlie wants to sell beeswax candles.  For every pound of beeswax, he can make 10 tapered candles.  One pound of beeswax and the wicks cost $10.00 in supplies.   If he sells each candle for $2.00 each, what is his net profit if he makes and sells 20 candles?",
+    "true_answer": "20",
+    "prompt_type": "react",
+    "model": "gpt-4o",
+    "raw_output": "Thought: First, we need to determine how many pounds of beeswax Charlie needs to make 20 candles. Since he can make 10 candles per pound, we can calculate the pounds required.\n\nAction: Compute[20 candles / 10 candles per pound]\n\nThought: The result will give us the number of pounds of beeswax needed. Then, we can calculate the cost of the beeswax and wicks for that amount.\n\nAction: Compute[2 pounds * $10.00 per pound]\n\nThought: Now, we know the total cost of supplies. Next, we need to calculate the total revenue from selling 20 candles at $2.00 each.\n\nAction: Compute[20 candles * $2.00 per candle]\n\nThought: With the total revenue and the total cost of supplies, we can now calculate the net profit by subtracting the total cost from the total revenue.\n\nAction: Compute[$40.00 (total revenue) - $20.00 (total cost)]\n\nAnswer: Charlie's net profit from making and selling 20 candles is $20.00.",
+    "thoughts": [
+      "First, we need to determine how many pounds of beeswax Charlie needs to make 20 candles. Since he can make 10 candles per pound, we can calculate the pounds required.",
+      "The result will give us the number of pounds of beeswax needed. Then, we can calculate the cost of the beeswax and wicks for that amount.",
+      "Now, we know the total cost of supplies. Next, we need to calculate the total revenue from selling 20 candles at $2.00 each.",
+      "With the total revenue and the total cost of supplies, we can now calculate the net profit by subtracting the total cost from the total revenue."
+    ],
+    "actions": [
+      "20 candles / 10 candles per pound",
+      "2 pounds * $10.00 per pound",
+      "20 candles * $2.00 per candle",
+      "$40.00 (total revenue) - $20.00 (total cost)"
+    ],
+    "answer": "Charlie's net profit from making and selling 20 candles is $20.00."
+  }
+]

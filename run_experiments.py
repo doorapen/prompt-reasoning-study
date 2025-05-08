@@ -5,13 +5,17 @@ import os
 import json
 import argparse
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+import re
 
 import pandas as pd
+import numpy as np
+import scipy.stats as st
 
 from src.prompts import get_prompt_template
 from src.inference import get_model_interface, run_inference
-from src.eval import evaluate_gsm8k, evaluate_strategyqa, bootstrap_ci, mcnemar_test
+from src.eval import evaluate_gsm8k as evaluate_gsm8k_main
+from src.eval import evaluate_strategyqa as evaluate_strategyqa_main
 from src.plots import plot_accuracy_comparison, plot_error_distribution, plot_rationale_length
 
 
@@ -100,12 +104,137 @@ def save_batch(batch: List[Dict[str, Any]],
         json.dump(batch, f, indent=2)
 
 
+# Helper for robust number extraction (simplified)
+def _extract_number_robust(text: Optional[str]) -> Optional[float]:
+    if text is None:
+        return None
+    text_str = str(text).strip()
+    text_str = text_str.replace(",", "") # Remove commas like 1,000
+    
+    # Check for #### pattern and take the part after it
+    if "####" in text_str:
+        text_str = text_str.split("####")[-1].strip()
+
+    # Try to find a number in the remaining string
+    # This regex matches integers and decimals, optionally signed.
+    # It will extract the first number found.
+    match = re.search(r"[-+]?\d*\.?\d+", text_str)
+    if match:
+        try:
+            return float(match.group(0))
+        except ValueError:
+            return None
+    return None
+
+def _is_correct_gsm8k_robust(result_item: Dict[str, Any]) -> bool:
+    true_answer_str = result_item.get("true_answer")
+    
+    predicted_answer_str = None
+    if result_item.get("prompt_type") == "self_reflection" and "final_answer" in result_item:
+        predicted_answer_str = result_item.get("final_answer")
+    else:
+        predicted_answer_str = result_item.get("answer")
+
+    if predicted_answer_str is None or true_answer_str is None:
+        return False
+
+    pred_num = _extract_number_robust(predicted_answer_str)
+    true_num = _extract_number_robust(true_answer_str)
+
+    if pred_num is not None and true_num is not None:
+        return abs(pred_num - true_num) < 1e-6 # Tolerance for float comparison
+    return False
+
+def _is_correct_strategyqa_simple(result_item: Dict[str, Any]) -> bool:
+    true_answer = str(result_item.get("true_answer", "")).lower().strip()
+    
+    predicted_answer_str = None
+    if result_item.get("prompt_type") == "self_reflection" and "final_answer" in result_item:
+        predicted_answer_str = result_item.get("final_answer")
+    else:
+        predicted_answer_str = result_item.get("answer")
+        
+    predicted_answer = str(predicted_answer_str if predicted_answer_str is not None else "").lower().strip()
+    return predicted_answer == true_answer
+
+
+# Modified accuracy calculation function to be dataset-aware
+def calculate_accuracy(results: List[Dict[str, Any]], dataset_name: str) -> float:
+    if not results:
+        return 0.0
+    
+    correct = 0
+    for result in results:
+        is_correct_val = False
+        if dataset_name == "gsm8k":
+            is_correct_val = _is_correct_gsm8k_robust(result)
+        elif dataset_name == "strategyqa":
+            is_correct_val = _is_correct_strategyqa_simple(result)
+        else: # Fallback for unknown datasets (maintains previous simple logic)
+            if result.get("prompt_type") == "self_reflection" and "final_answer" in result:
+                is_correct_val = result.get("final_answer") == result.get("true_answer")
+            else:
+                is_correct_val = result.get("answer") == result.get("true_answer")
+        
+        if is_correct_val:
+            correct += 1
+    
+    return correct / len(results) if results else 0.0
+
+
+# Fixed bootstrap CI wrapper, now takes dataset_name
+def get_bootstrap_ci(results: List[Dict[str, Any]], dataset_name: str, confidence: float = 0.95, n_bootstrap: int = 1000):
+    """Get bootstrap confidence interval for accuracy."""
+    if not results: # If there are no results, accuracy is 0 and CI is [0,0]
+        return {"estimate": 0.0, "lower_bound": 0.0, "upper_bound": 0.0}
+    
+    original_acc = calculate_accuracy(results, dataset_name)
+    n = len(results)
+    
+    # For small sample sizes (n < 30), use Wilson score interval
+    # This will now correctly handle n=1, 2, 3, 4 etc. up to 29
+    if n < 30:
+        k = int(round(original_acc * n))
+        
+        # Ensure k is within valid bounds [0, n]
+        k = max(0, min(n, k))
+
+        ci_low, ci_high = st.binomtest(k, n).proportion_ci(
+            confidence_level=confidence, method="wilson"
+        )
+        
+        return {
+            "estimate": original_acc,
+            "lower_bound": ci_low,
+            "upper_bound": ci_high
+        }
+    
+    # For larger samples (n >= 30), use bootstrap
+    accuracies = []
+    for _ in range(n_bootstrap):
+        indices = np.random.choice(n, n, replace=True)
+        bootstrap_sample = [results[i] for i in indices]
+        acc = calculate_accuracy(bootstrap_sample, dataset_name) # Pass dataset_name
+        accuracies.append(acc)
+    
+    alpha = (1 - confidence) / 2
+    lower_bound = np.percentile(accuracies, alpha * 100)
+    upper_bound = np.percentile(accuracies, (1 - alpha) * 100)
+    
+    return {
+        "estimate": original_acc,
+        "lower_bound": lower_bound,
+        "upper_bound": upper_bound
+    }
+
+
 def run_experiment(
     model_name: str,
     dataset_name: str,
     prompt_types: List[str],
     max_examples: int = None,
-    save_intermediate: bool = True
+    save_intermediate: bool = True,
+    temperature: float = 0.0
 ):
     """
     Run a complete experiment for a model on a dataset with multiple prompt types.
@@ -116,6 +245,7 @@ def run_experiment(
         prompt_types: List of prompt types to evaluate
         max_examples: Maximum number of examples to process
         save_intermediate: Whether to save intermediate results
+        temperature: Temperature for model generation
     """
     # Load dataset
     dataset = load_dataset(dataset_name, max_examples=max_examples)
@@ -154,8 +284,16 @@ def run_experiment(
             dataset=dataset,
             examples=few_shot_examples if prompt_type == "few_shot" else None,
             batch_callback=batch_callback,
-            batch_size=5  # Save every 5 examples
+            batch_size=5,  # Save every 5 examples
+            temperature=temperature
         )
+        
+        # Special post-processing for self-reflection to ensure we use the correct answer
+        if prompt_type == "self_reflection":
+            for result in results:
+                if "final_answer" in result:
+                    # Make sure the final_answer after reflection is also in answer
+                    result["answer"] = result["final_answer"]
         
         # Save results
         save_results(results, model_name, dataset_name, prompt_type)
@@ -163,9 +301,11 @@ def run_experiment(
     
     # Run evaluation based on dataset
     if dataset_name == "gsm8k":
-        metrics = evaluate_gsm8k(all_results)
+        metrics = evaluate_gsm8k_main(all_results)
     elif dataset_name == "strategyqa":
-        metrics = evaluate_strategyqa(all_results)
+        metrics = evaluate_strategyqa_main(all_results)
+    else: # Fallback if dataset is neither
+        metrics = {"total": len(all_results), "accuracy": calculate_accuracy(all_results, dataset_name)}
     
     # Generate evaluation report
     print("\n=== Evaluation Results ===")
@@ -177,19 +317,29 @@ def run_experiment(
     results_by_prompt = {}
     for prompt_type in prompt_types:
         prompt_results = [r for r in all_results if r.get("prompt_type") == prompt_type]
+        
+        # Special handling for self-reflection to ensure using final_answer
+        if prompt_type == "self_reflection":
+            for result in prompt_results:
+                if "final_answer" in result and not result.get("answer"): # Should be redundant if earlier processing was done
+                    result["answer"] = result["final_answer"]
+        
+        current_prompt_metrics = {}
         if dataset_name == "gsm8k":
-            prompt_metrics = evaluate_gsm8k(prompt_results)
-        else:
-            prompt_metrics = evaluate_strategyqa(prompt_results)
+            current_prompt_metrics = evaluate_gsm8k_main(prompt_results)
+        elif dataset_name == "strategyqa":
+            current_prompt_metrics = evaluate_strategyqa_main(prompt_results)
+        else: # Fallback
+            current_prompt_metrics = {"accuracy": calculate_accuracy(prompt_results, dataset_name), 
+                                      "total": len(prompt_results)}
+
+        results_by_prompt[prompt_type] = current_prompt_metrics
+        # Ensure accuracy key exists before printing
+        accuracy_to_print = current_prompt_metrics.get('accuracy', 0.0)
+        print(f"\n{prompt_type} accuracy: {accuracy_to_print:.4f}")
         
-        results_by_prompt[prompt_type] = prompt_metrics
-        print(f"\n{prompt_type} accuracy: {prompt_metrics['accuracy']:.4f}")
-        
-        # Get confidence intervals
-        ci = bootstrap_ci(
-            prompt_results,
-            lambda res: sum(1 for r in res if r.get("answer") == r.get("true_answer")) / len(res)
-        )
+        # Get confidence intervals using the fixed bootstrap method, passing dataset_name
+        ci = get_bootstrap_ci(prompt_results, dataset_name)
         print(f"95% CI: [{ci['lower_bound']:.4f}, {ci['upper_bound']:.4f}]")
     
     # Generate plots
@@ -205,17 +355,17 @@ def run_experiment(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run reasoning experiments")
-    parser.add_argument("--model", type=str, choices=["gpt-4", "deepseek-r1"], required=True,
-                        help="Model to use for inference")
-    parser.add_argument("--dataset", type=str, choices=["gsm8k", "strategyqa"], required=True,
-                        help="Dataset to evaluate on")
-    parser.add_argument("--prompts", type=str, nargs="+", 
-                        choices=["zero_shot", "few_shot", "cot", "self_consistency", "self_reflection", "react", "all"],
-                        default=["all"],
-                        help="Prompt types to evaluate")
-    parser.add_argument("--max_examples", type=int, default=None,
-                        help="Maximum number of examples to process")
+    parser = argparse.ArgumentParser(description="Run experiments with different reasoning strategies.")
+    parser.add_argument("--model", required=True, choices=["gpt-4", "deepseek-r1"], help="Model to use")
+    parser.add_argument("--dataset", required=True, choices=["gsm8k", "strategyqa"], help="Dataset to use")
+    parser.add_argument("--prompts", nargs="+", default=["zero_shot"], 
+                      choices=["zero_shot", "few_shot", "cot", "self_consistency", "self_reflection", "react", "all"],
+                      help="Prompt templates to use")
+    parser.add_argument("--max_examples", type=int, default=None, help="Maximum number of examples to process")
+    
+    # Add these new arguments:
+    parser.add_argument("--temperature", type=float, default=0.0, help="Temperature for model generation")
+    parser.add_argument("--skip_inference", action="store_true", help="Skip inference and only evaluate existing results")
     
     args = parser.parse_args()
     
@@ -229,7 +379,8 @@ def main():
         model_name=args.model,
         dataset_name=args.dataset,
         prompt_types=prompt_types,
-        max_examples=args.max_examples
+        max_examples=args.max_examples,
+        temperature=args.temperature
     )
 
 

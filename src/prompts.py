@@ -2,6 +2,8 @@
 Prompt templates for different reasoning strategies.
 """
 from typing import List, Dict, Any, Optional
+import os
+import re
 
 class PromptTemplate:
     """Base class for all prompt templates."""
@@ -25,8 +27,55 @@ class ZeroShotPrompt(PromptTemplate):
     def __init__(self):
         super().__init__("zero_shot")
     
-    def format(self, task_input: str, examples: Optional[List[Dict[str, str]]] = None) -> str:
-        return task_input
+    def format(self, question: str, examples: List[Dict[str, str]] = None) -> str:
+        # More structured prompt that works for all models
+        return f"""Solve the following problem:
+{question}
+
+Make sure to show your work step-by-step, and finish with the final answer clearly stated as:
+"Therefore, the answer is: [your answer]"
+"""
+    
+    def parse_output(self, output: str) -> Dict[str, Any]:
+        if not output or output.startswith("ERROR:"):
+            return {"answer": "ERROR", "reasoning": output}
+            
+        # Be more flexible in extracting the final answer
+        response = output.strip()
+        
+        # Try to extract answer from "the answer is" format
+        answer_pattern = r"(?:therefore|thus|so|hence|in conclusion|final answer)[\s,:].*(?:answer|result|solution|value)[\s:]*([\d\.\,\-]+)"
+        match = re.search(answer_pattern, response.lower())
+        if match:
+            return {"answer": match.group(1).strip(), "reasoning": response}
+        
+        # Try another common pattern
+        answer_pattern2 = r"(?:the|my|final|correct)[\s\:](?:answer|result|solution|value)[\s:]*([\d\.\,\-]+)"
+        match = re.search(answer_pattern2, response.lower())
+        if match:
+            return {"answer": match.group(1).strip(), "reasoning": response}
+        
+        # If that fails, try to extract from end of response (last number)
+        number_pattern = r"(\d[\d\.\,]*)(?!\d)"
+        numbers = re.findall(number_pattern, response)
+        if numbers:
+            return {"answer": numbers[-1].strip(), "reasoning": response}
+        
+        # If still no match, see if it's a yes/no answer
+        yes_pattern = r"(?:therefore|thus|so|hence|in conclusion|final answer)[\s,:].*(?:answer|result|solution)[\s:]*(?:is[\s:]*)?(yes)"
+        no_pattern = r"(?:therefore|thus|so|hence|in conclusion|final answer)[\s,:].*(?:answer|result|solution)[\s:]*(?:is[\s:]*)?(no)"
+        
+        if re.search(yes_pattern, response.lower()) or "answer: yes" in response.lower():
+            return {"answer": "yes", "reasoning": response}
+        elif re.search(no_pattern, response.lower()) or "answer: no" in response.lower():
+            return {"answer": "no", "reasoning": response}
+        elif "yes" in response.lower().split()[-5:]:  # Check if "yes" is in the last few words
+            return {"answer": "yes", "reasoning": response}
+        elif "no" in response.lower().split()[-5:]:   # Check if "no" is in the last few words
+            return {"answer": "no", "reasoning": response}
+            
+        # Default case
+        return {"answer": "ERROR: No answer found", "reasoning": response}
 
 
 class FewShotPrompt(PromptTemplate):
@@ -92,7 +141,7 @@ class SelfReflectionPrompt(PromptTemplate):
     
     def format_reflection(self, initial_output: str) -> str:
         """Format the reflection prompt based on initial output."""
-        return f"{initial_output}\n\nIs your answer correct? Why?"
+        return f"{initial_output}\n\nLet's reflect on this answer. Is it correct? If not, what's the correct answer? \nFinal Answer:"
     
     def parse_output(self, output: str, reflection_output: str) -> Dict[str, Any]:
         # Parse both initial output and reflection
@@ -100,14 +149,29 @@ class SelfReflectionPrompt(PromptTemplate):
         
         # Extract final answer potentially revised after reflection
         lines = reflection_output.strip().split('\n')
-        final_answer = lines[-1].strip()
+        reflection_text = ""
+        final_answer = ""
+        
+        # Improved parsing for final answer after reflection
+        for i, line in enumerate(lines):
+            if "Final Answer:" in line or "final answer:" in line:
+                final_answer = line.split(":", 1)[1].strip()
+                break
+            elif i == len(lines) - 1:  # If no explicit marker, use last line
+                final_answer = line.strip()
+        
+        # If no clear final answer found, use the original answer
+        if not final_answer:
+            final_answer = cot_result["answer"]
         
         return {
             "raw_output": output + "\n\n" + reflection_output,
-            "initial_reasoning": cot_result["reasoning"],
-            "initial_answer": cot_result["answer"],
+            "initial_reasoning": cot_result.get("reasoning", ""),
+            "initial_answer": cot_result.get("answer", ""),
             "reflection": reflection_output,
-            "final_answer": final_answer
+            "final_answer": final_answer,
+            "answer": final_answer,  # Make sure answer field is also set
+            "reasoning_length": cot_result.get("reasoning_length", 0)
         }
 
 

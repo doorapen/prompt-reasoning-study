@@ -9,6 +9,8 @@ import openai
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from tqdm import tqdm
+import requests
+import json
 
 from src.prompts import PromptTemplate
 
@@ -57,58 +59,77 @@ class GPT4Interface(ModelInterface):
 
 
 class DeepSeekInterface(ModelInterface):
-    """Interface for DeepSeek-R1 model."""
+    """Interface for DeepSeek via API."""
     
-    def __init__(self, model_id: str = "deepseek-ai/deepseek-r1-7b"):
-        super().__init__(model_id)
-        
-        # Configure 4-bit quantization
-        quantization_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16
-        )
-        
-        # Load model and tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            device_map="auto",
-            quantization_config=quantization_config
-        )
+    def __init__(self):
+        super().__init__("deepseek-r1")
+        self.api_key = os.environ.get("DEEPSEEK_API_KEY")
+        if not self.api_key:
+            raise ValueError("DEEPSEEK_API_KEY environment variable is not set")
+        self.api_base = "https://api.deepseek.com"  # Check the actual endpoint from DeepSeek docs
     
-    def generate(self, prompt: str, 
-                 temperature: float = 0.0, 
-                 max_tokens: int = 1024) -> str:
-        """Generate text from DeepSeek-R1."""
+    def generate(self, prompt: str, temperature: float = 0.7, max_tokens: int = 1024) -> str:
+        """Generate text from DeepSeek API."""
         try:
-            inputs = self.tokenizer(prompt, return_tensors="pt").to(self.model.device)
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}"
+            }
             
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    **inputs,
-                    max_new_tokens=max_tokens,
-                    temperature=max(temperature, 1e-7),  # Avoid exact 0
-                    do_sample=temperature > 0
-                )
+            # Use a model that's better for mathematical reasoning if available
+            data = {
+                "model": "deepseek-coder",  # Try their coder model which may be better at math
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": min(temperature, 0.2),  # Use lower temperature for math problems
+                "max_tokens": max_tokens
+            }
             
-            # Extract the generated text (excluding the prompt)
-            prompt_length = inputs.input_ids.shape[1]
-            generated_ids = outputs[0][prompt_length:]
-            return self.tokenizer.decode(generated_ids, skip_special_tokens=True)
+            response = requests.post(
+                f"{self.api_base}/v1/chat/completions",
+                headers=headers,
+                data=json.dumps(data)
+            )
+            
+            if response.status_code != 200:
+                print(f"Error from DeepSeek API: {response.status_code}, {response.text}")
+                return f"ERROR: API returned status code {response.status_code}"
+            
+            # Debug only the first time
+            response_json = response.json()
+            print(f"\nDEBUG: DeepSeek API response structure: {list(response_json.keys())}")
+            
+            if "choices" in response_json and len(response_json["choices"]) > 0:
+                if "message" in response_json["choices"][0]:
+                    return response_json["choices"][0]["message"]["content"]
+                else:
+                    print(f"Unexpected response structure: {response_json['choices'][0]}")
+                    return response_json["choices"][0].get("text", "ERROR: Unknown response format")
+            else:
+                print(f"No choices in response: {response_json}")
+                return "ERROR: No valid response from API"
         
         except Exception as e:
-            print(f"Error in DeepSeek generation: {e}")
+            print(f"Error in DeepSeek API generation: {e}")
             return f"ERROR: {str(e)}"
 
 
-def get_model_interface(model_type: str) -> ModelInterface:
-    """Get a model interface by type."""
-    if model_type.lower() == "gpt-4":
+def get_model_interface(model_name: str) -> ModelInterface:
+    """
+    Get the appropriate model interface based on the model name.
+    
+    Args:
+        model_name: Name of the model
+        
+    Returns:
+        ModelInterface instance
+    """
+    if model_name == "gpt-4":
         return GPT4Interface()
-    elif model_type.lower() == "deepseek-r1":
+    elif model_name == "deepseek-r1":
+        # Don't pass the old model ID here - let it use the default we set in the class
         return DeepSeekInterface()
     else:
-        raise ValueError(f"Unknown model type: {model_type}")
+        raise ValueError(f"Unknown model: {model_name}")
 
 
 def run_inference(
@@ -180,6 +201,10 @@ def run_inference(
                 )
                 
                 parsed_result = prompt_template.parse_output(initial_output, reflection_output)
+                
+                # Ensure answer field is set for evaluation
+                if "final_answer" in parsed_result and not parsed_result.get("answer"):
+                    parsed_result["answer"] = parsed_result["final_answer"]
             
             # Standard handling for other prompt types
             else:
