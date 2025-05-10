@@ -61,6 +61,8 @@ class GPT4Interface(ModelInterface):
 class DeepSeekInterface(ModelInterface):
     """Interface for DeepSeek via API."""
     
+    _debug_printed_once = False
+    
     def __init__(self):
         super().__init__("deepseek-r1")
         self.api_key = os.environ.get("DEEPSEEK_API_KEY")
@@ -76,27 +78,43 @@ class DeepSeekInterface(ModelInterface):
                 "Authorization": f"Bearer {self.api_key}"
             }
             
+            # Adjust temperature: Use provided temperature. If it's 0, use a small default.
+            # This allows higher temperatures for CoT, self-consistency etc. if specified by run_inference
+            effective_temperature = temperature
+            if effective_temperature <= 0.01: # If very low or zero, use a small default for determinism
+                effective_temperature = 0.1 # Or 0.0, but some models require > 0
+            elif effective_temperature > 1.0: # Cap temperature if it's too high
+                effective_temperature = 1.0
+
+
             # Use a model that's better for mathematical reasoning if available
             data = {
                 "model": "deepseek-coder",  # Try their coder model which may be better at math
                 "messages": [{"role": "user", "content": prompt}],
-                "temperature": min(temperature, 0.2),  # Use lower temperature for math problems
+                "temperature": effective_temperature, # Use the adjusted temperature
                 "max_tokens": max_tokens
             }
             
+            # Define a timeout (e.g., 60 seconds for connect and read)
+            timeout_seconds = 60 
+
             response = requests.post(
                 f"{self.api_base}/v1/chat/completions",
                 headers=headers,
-                data=json.dumps(data)
+                data=json.dumps(data),
+                timeout=timeout_seconds # Add timeout here
             )
             
             if response.status_code != 200:
                 print(f"Error from DeepSeek API: {response.status_code}, {response.text}")
                 return f"ERROR: API returned status code {response.status_code}"
             
-            # Debug only the first time
             response_json = response.json()
-            print(f"\nDEBUG: DeepSeek API response structure: {list(response_json.keys())}")
+            
+            # Debug only the first time
+            if not DeepSeekInterface._debug_printed_once:
+                print(f"\nDEBUG: DeepSeek API response structure: {list(response_json.keys())}")
+                DeepSeekInterface._debug_printed_once = True
             
             if "choices" in response_json and len(response_json["choices"]) > 0:
                 if "message" in response_json["choices"][0]:
@@ -108,6 +126,12 @@ class DeepSeekInterface(ModelInterface):
                 print(f"No choices in response: {response_json}")
                 return "ERROR: No valid response from API"
         
+        except requests.exceptions.Timeout:
+            print(f"Timeout error connecting to DeepSeek API for prompt: {prompt[:100]}...")
+            return "ERROR: API request timed out"
+        except requests.exceptions.RequestException as e: # Catch other requests-related errors
+            print(f"Request error during DeepSeek API generation: {e}")
+            return f"ERROR: API request failed - {str(e)}"
         except Exception as e:
             print(f"Error in DeepSeek API generation: {e}")
             return f"ERROR: {str(e)}"
@@ -173,19 +197,28 @@ def run_inference(
                 for _ in range(prompt_template.num_samples):
                     output = model.generate(
                         prompt, 
-                        temperature=max(0.7, temperature),  # Use higher temperature for diversity
+                        temperature=max(0.7, temperature),  # Often uses higher temperature
                         max_tokens=max_tokens
                     )
                     outputs.append(output)
                 
                 # Process through voting or other aggregation
                 from src.decoding import majority_vote
-                final_output = majority_vote(outputs, prompt_template)
+                final_output_text = majority_vote(outputs, prompt_template) # This is the text from majority vote
+
+                # Parse the final_output_text to get the 'answer' field and other potential fields
+                parsed_final_answer_details = prompt_template.parse_output(final_output_text)
+
                 parsed_result = {
                     "sample_outputs": outputs,
-                    "majority_vote": final_output,
-                    **prompt_template.parse_output(outputs[0])  # Parse first sample for analysis
+                    "majority_vote_text": final_output_text, # Store the text from majority vote
+                    "answer": parsed_final_answer_details.get("answer"), # Get the parsed answer
+                    "model_output_full": final_output_text, # The full output for this method is the majority vote result
+                    # You might want to add other fields from parsed_final_answer_details if needed
                 }
+                # Ensure 'answer' is present, even if None, for consistent structure
+                if "answer" not in parsed_result:
+                    parsed_result["answer"] = None
             
             # Special handling for self-reflection
             elif prompt_template.name == "self_reflection":
