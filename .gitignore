@@ -1,2 +1,25 @@
-# Ignore virtual environments
-.venv/ 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.swp
+*~
+
+# Generated results - you might want to be more specific
+# or keep some, but generally, large datasets/results are not tracked.
+results/
+plots/
+
+# Environment
+.env
+venv/
+*.venv/
+
+# OS-specific
+.DS_Store
+Thumbs.db 
