@@ -4,6 +4,7 @@ Prompt templates for different reasoning strategies.
 from typing import List, Dict, Any, Optional
 import os
 import re
+from collections import Counter
 
 class PromptTemplate:
     """Base class for all prompt templates."""
@@ -15,10 +16,68 @@ class PromptTemplate:
         """Format the prompt template with the task input."""
         raise NotImplementedError
     
-    def parse_output(self, output: str) -> Dict[str, Any]:
-        """Parse the model output."""
-        # Default implementation just returns the raw output
-        return {"raw_output": output, "answer": output.strip()}
+    def _extract_answer(self, text: str) -> Optional[float]:
+        """
+        Extracts the numerical answer from a single model output string.
+        Tries "#### <number>", then specific phrases, then the last number found.
+        """
+        if text is None:
+            return None
+        
+        text_str = str(text).strip()
+        # Standardize by removing commas that might be in numbers
+        text_str_no_commas = text_str.replace(",", "")
+
+        # Priority 1: "#### <number>"
+        # Take the part after the LAST "####"
+        if "####" in text_str_no_commas:
+            parts = text_str_no_commas.split("####")
+            answer_part = parts[-1].strip()
+            # Find the first number in this part
+            match = re.search(r"[-+]?\d*\.?\d+", answer_part)
+            if match:
+                try:
+                    return float(match.group(0))
+                except ValueError:
+                    pass # Fall through if conversion fails, try other methods
+
+        # Priority 2: Look for specific phrases like "The final answer is X"
+        # This regex looks for variations of "The final answer is", "The answer is", etc., followed by a number.
+        # It's applied to the text_str_no_commas for consistency.
+        specific_phrase_match = re.search(
+            r"(?:The final answer is|The answer is|Therefore, the answer is|So the answer is)\s*[:\s]*([-+]?\d*\.?\d+)", 
+            text_str_no_commas, 
+            re.IGNORECASE
+        )
+        if specific_phrase_match:
+            try:
+                return float(specific_phrase_match.group(1))
+            except ValueError:
+                pass # Fall through
+
+        # Priority 3 (General fallback): Find all numbers in text_str_no_commas and return the last one.
+        # This is a common heuristic for GSM8K if no other specific pattern matches.
+        numbers_found = re.findall(r"[-+]?\d*\.?\d+", text_str_no_commas)
+        if numbers_found:
+            try:
+                # Get the last number found in the string
+                return float(numbers_found[-1])
+            except (ValueError, IndexError):
+                # Should not happen if numbers_found is populated and they are valid numbers
+                return None 
+        
+        return None # Default if no answer found
+
+    def parse_output(self, model_output: str, *args) -> Dict[str, Any]:
+        """
+        Parses the model output string and extracts the answer.
+        (This is the method for single outputs, used by ZeroShot, FewShot etc.)
+        """
+        answer = self._extract_answer(model_output)
+        if answer is not None:
+            return {"answer": answer}
+        else:
+            return {"answer": None, "parsing_error": "Could not extract answer from model output"}
 
 
 class ZeroShotPrompt(PromptTemplate):
@@ -37,45 +96,39 @@ Make sure to show your work step-by-step, and finish with the final answer clear
 """
     
     def parse_output(self, output: str) -> Dict[str, Any]:
-        if not output or output.startswith("ERROR:"):
-            return {"answer": "ERROR", "reasoning": output}
-            
-        # Be more flexible in extracting the final answer
-        response = output.strip()
+        reasoning_text = output # Default reasoning is the full output
+        answer_val = None
+        parsing_error = None
+
+        # Try specific pattern first, as instructed by the prompt:
+        # "Therefore, the answer is: [your answer]"
+        # This regex looks for variations of that phrase.
+        specific_pattern = r"(?:Therefore,\s*the\s*answer\s*is|The\s*final\s*answer\s*is)\s*[:\s]*([-+]?\d*\.?\d+)"
+        match = re.search(specific_pattern, output, re.IGNORECASE)
         
-        # Try to extract answer from "the answer is" format
-        answer_pattern = r"(?:therefore|thus|so|hence|in conclusion|final answer)[\s,:].*(?:answer|result|solution|value)[\s:]*([\d\.\,\-]+)"
-        match = re.search(answer_pattern, response.lower())
         if match:
-            return {"answer": match.group(1).strip(), "reasoning": response}
+            try:
+                answer_val = float(match.group(1).replace(",", ""))
+            except ValueError:
+                # Found the phrase but the number part was invalid
+                parsing_error = "Found specific answer phrase but number parsing failed."
         
-        # Try another common pattern
-        answer_pattern2 = r"(?:the|my|final|correct)[\s\:](?:answer|result|solution|value)[\s:]*([\d\.\,\-]+)"
-        match = re.search(answer_pattern2, response.lower())
-        if match:
-            return {"answer": match.group(1).strip(), "reasoning": response}
+        if answer_val is None: 
+            # If specific pattern failed or wasn't found, fallback to the robust base parser
+            parsed_base = super().parse_output(output) # Uses the enhanced _extract_answer
+            answer_val = parsed_base.get("answer")
+            if answer_val is None and not parsing_error: # If base also failed, and we didn't have a specific error yet
+                parsing_error = parsed_base.get("parsing_error", "Could not extract answer using base parser.")
+            # If base succeeded, clear any prior specific parsing error
+            elif answer_val is not None:
+                parsing_error = None
         
-        # If that fails, try to extract from end of response (last number)
-        number_pattern = r"(\d[\d\.\,]*)(?!\d)"
-        numbers = re.findall(number_pattern, response)
-        if numbers:
-            return {"answer": numbers[-1].strip(), "reasoning": response}
-        
-        # If still no match, see if it's a yes/no answer
-        yes_pattern = r"(?:therefore|thus|so|hence|in conclusion|final answer)[\s,:].*(?:answer|result|solution)[\s:]*(?:is[\s:]*)?(yes)"
-        no_pattern = r"(?:therefore|thus|so|hence|in conclusion|final answer)[\s,:].*(?:answer|result|solution)[\s:]*(?:is[\s:]*)?(no)"
-        
-        if re.search(yes_pattern, response.lower()) or "answer: yes" in response.lower():
-            return {"answer": "yes", "reasoning": response}
-        elif re.search(no_pattern, response.lower()) or "answer: no" in response.lower():
-            return {"answer": "no", "reasoning": response}
-        elif "yes" in response.lower().split()[-5:]:  # Check if "yes" is in the last few words
-            return {"answer": "yes", "reasoning": response}
-        elif "no" in response.lower().split()[-5:]:   # Check if "no" is in the last few words
-            return {"answer": "no", "reasoning": response}
-            
-        # Default case
-        return {"answer": "ERROR: No answer found", "reasoning": response}
+        final_parsing_error = parsing_error if answer_val is None else None
+
+        return {"answer": answer_val, 
+                "reasoning": reasoning_text, 
+                "model_output_full": output,
+                "parsing_error": final_parsing_error}
 
 
 class FewShotPrompt(PromptTemplate):
@@ -95,6 +148,8 @@ class FewShotPrompt(PromptTemplate):
         
         prompt += f"Q: {task_input}\nA:"
         return prompt
+    
+    # No parse_output override, so it will use the robust base PromptTemplate.parse_output
 
 
 class ChainOfThoughtPrompt(PromptTemplate):
@@ -107,17 +162,19 @@ class ChainOfThoughtPrompt(PromptTemplate):
         return f"{task_input}\nLet's think step by step."
     
     def parse_output(self, output: str) -> Dict[str, Any]:
-        # Try to extract the final answer from the reasoning chain
-        lines = output.strip().split('\n')
-        answer = lines[-1].strip()
-        reasoning = '\n'.join(lines[:-1]) if len(lines) > 1 else ""
+        # Use the robust base parser to get the numerical answer
+        parsed_base = super().parse_output(output)
+        answer_val = parsed_base.get("answer")
+
+        reasoning_text = output 
         
-        return {
-            "raw_output": output,
-            "reasoning": reasoning,
-            "answer": answer,
-            "reasoning_length": len(reasoning.split())
-        }
+        # If base parser found an error, reflect it
+        parsing_error_to_return = parsed_base.get("parsing_error") if answer_val is None else None
+            
+        return {"answer": answer_val, 
+                "reasoning": reasoning_text, 
+                "model_output_full": output,
+                "parsing_error": parsing_error_to_return}
 
 
 class SelfConsistencyPrompt(ChainOfThoughtPrompt):
@@ -128,6 +185,48 @@ class SelfConsistencyPrompt(ChainOfThoughtPrompt):
         self.name = "self_consistency"
         self.num_samples = num_samples
 
+    def parse_output(self, sample_outputs: List[str], *args) -> Dict[str, Any]:
+        """
+        Parses a list of sample outputs, extracts an answer from each,
+        and returns the majority vote.
+        """
+        if not sample_outputs or not isinstance(sample_outputs, list):
+            return {"answer": None, "parsing_error": "No sample_outputs provided or not a list"}
+
+        extracted_answers = []
+        for single_output_str in sample_outputs:
+            if not isinstance(single_output_str, str):
+                # Optionally log a warning for non-string items
+                # print(f"Warning: Non-string item in sample_outputs: {type(single_output_str)}")
+                continue
+            
+            # Use the _extract_answer method (inherited or defined in PromptTemplate)
+            # to parse each individual sample string.
+            answer_val = self._extract_answer(single_output_str)
+            
+            if answer_val is not None:
+                # Convert to string for reliable counting, especially if answers can be numbers/strings
+                extracted_answers.append(str(answer_val))
+
+        if not extracted_answers:
+            return {"answer": None, "parsing_error": "No answers could be extracted from any sample_outputs"}
+
+        # Perform majority vote
+        answer_counts = Counter(extracted_answers)
+        # most_common(1) returns a list of tuples [(element, count)], e.g., [('123', 3)]
+        most_common_list = answer_counts.most_common(1)
+        
+        if not most_common_list:
+            # This case should ideally not be reached if extracted_answers is populated
+            return {"answer": None, "parsing_error": "Majority vote failed (no common answers)"}
+
+        final_answer_str = most_common_list[0][0]
+        
+        # The final_answer_str is a string. If your _is_correct_gsm8k_robust
+        # expects a number, it will handle the conversion via _extract_number_robust.
+        # So, returning the string representation from the majority vote is fine.
+        return {"answer": final_answer_str}
+
 
 class SelfReflectionPrompt(PromptTemplate):
     """Self-Reflection prompt template."""
@@ -136,42 +235,37 @@ class SelfReflectionPrompt(PromptTemplate):
         super().__init__("self_reflection")
     
     def format(self, task_input: str, examples: Optional[List[Dict[str, str]]] = None) -> str:
-        cot_prompt = ChainOfThoughtPrompt().format(task_input, examples)
-        return cot_prompt
+        # For self-reflection, the initial prompt is often a CoT-style prompt
+        return f"{task_input}\nLet's think step by step to get an initial answer."
     
     def format_reflection(self, initial_output: str) -> str:
         """Format the reflection prompt based on initial output."""
-        return f"{initial_output}\n\nLet's reflect on this answer. Is it correct? If not, what's the correct answer? \nFinal Answer:"
-    
-    def parse_output(self, output: str, reflection_output: str) -> Dict[str, Any]:
-        # Parse both initial output and reflection
-        cot_result = ChainOfThoughtPrompt().parse_output(output)
+        # The reflection prompt should guide the model to critique and potentially correct its initial output.
+        return f"Here is an initial attempt to solve the problem:\n{initial_output}\n\nPlease review this solution. Are there any errors? If so, correct them and provide the final answer. If the solution is correct, confirm it.\nFinal Answer:"
+
+    def parse_output(self, initial_model_output: str, reflection_model_output: str) -> Dict[str, Any]:
+        # Parse the initial output (e.g., using CoT logic or base logic)
+        # For simplicity, let's assume initial_output might contain reasoning and an answer
+        parsed_initial = super().parse_output(initial_model_output) # Use robust base for initial answer
         
-        # Extract final answer potentially revised after reflection
-        lines = reflection_output.strip().split('\n')
-        reflection_text = ""
-        final_answer = ""
+        # Parse the reflection output for the final answer
+        parsed_reflection_final = super().parse_output(reflection_model_output) # Use robust base for reflected answer
         
-        # Improved parsing for final answer after reflection
-        for i, line in enumerate(lines):
-            if "Final Answer:" in line or "final answer:" in line:
-                final_answer = line.split(":", 1)[1].strip()
-                break
-            elif i == len(lines) - 1:  # If no explicit marker, use last line
-                final_answer = line.strip()
+        final_answer_val = parsed_reflection_final.get("answer")
         
-        # If no clear final answer found, use the original answer
-        if not final_answer:
-            final_answer = cot_result["answer"]
-        
+        # If reflection didn't yield a clear answer, consider the initial one (if valid)
+        if final_answer_val is None and parsed_initial.get("answer") is not None:
+            final_answer_val = parsed_initial.get("answer")
+
         return {
-            "raw_output": output + "\n\n" + reflection_output,
-            "initial_reasoning": cot_result.get("reasoning", ""),
-            "initial_answer": cot_result.get("answer", ""),
-            "reflection": reflection_output,
-            "final_answer": final_answer,
-            "answer": final_answer,  # Make sure answer field is also set
-            "reasoning_length": cot_result.get("reasoning_length", 0)
+            "initial_output": initial_model_output,
+            "reflection_output": reflection_model_output,
+            "initial_answer_parsed": parsed_initial.get("answer"),
+            "final_answer_from_reflection": parsed_reflection_final.get("answer"),
+            "answer": final_answer_val, # This is the one used for evaluation
+            "model_output_full": f"INITIAL:\n{initial_model_output}\n\nREFLECTION:\n{reflection_model_output}",
+            "parsing_error_initial": parsed_initial.get("parsing_error"),
+            "parsing_error_reflection": parsed_reflection_final.get("parsing_error")
         }
 
 
@@ -196,26 +290,52 @@ class ReActPrompt(PromptTemplate):
         lines = output.strip().split('\n')
         thoughts = []
         actions = []
-        final_answer = ""
+        parsed_answer_val = None 
+        parsing_error_final = None
         
+        # Try to find "Answer:" line first
         for line in lines:
-            line = line.strip()
-            if line.startswith("Thought:"):
-                thoughts.append(line[len("Thought:"):].strip())
-            elif line.startswith("Action: Compute["):
-                # Extract the computation
-                expr = line[len("Action: Compute["):]
+            line_stripped = line.strip()
+            if line_stripped.startswith("Thought:"):
+                thoughts.append(line_stripped[len("Thought:"):].strip())
+            elif line_stripped.startswith("Action: Compute["):
+                expr = line_stripped[len("Action: Compute["):]
                 expr = expr.split("]")[0] if "]" in expr else expr
                 actions.append(expr)
-            elif line.startswith("Answer:"):
-                final_answer = line[len("Answer:"):].strip()
+            elif line_stripped.startswith("Answer:"):
+                answer_text_after_marker = line_stripped[len("Answer:"):].strip()
+                # Try to parse this specific answer text robustly using the base method
+                temp_parsed = super().parse_output(answer_text_after_marker) # Uses enhanced _extract_answer
+                if temp_parsed.get("answer") is not None:
+                    parsed_answer_val = temp_parsed.get("answer")
+                    # If we found an answer here, clear any potential error from later fallbacks
+                    parsing_error_final = None 
+                    break 
+                else:
+                    # Store error from this attempt if it's the first one
+                    if parsing_error_final is None:
+                         parsing_error_final = temp_parsed.get("parsing_error", "Failed to parse content after 'Answer:' marker.")
         
-        return {
-            "raw_output": output,
+        # If "Answer:" marker didn't yield an answer, try parsing the whole output
+        if parsed_answer_val is None:
+            parsed_base = super().parse_output(output) # Uses enhanced _extract_answer
+            parsed_answer_val = parsed_base.get("answer")
+            if parsed_answer_val is None:
+                # If we already had an error from "Answer:" marker parsing, keep it, otherwise use base error
+                parsing_error_final = parsing_error_final if parsing_error_final else parsed_base.get("parsing_error", "Failed to parse whole output.")
+            else:
+                # Base parsing succeeded, so no error.
+                parsing_error_final = None
+
+
+        result = {
+            "model_output_full": output, 
             "thoughts": thoughts,
             "actions": actions,
-            "answer": final_answer
+            "answer": parsed_answer_val,
+            "parsing_error": parsing_error_final if parsed_answer_val is None else None
         }
+        return result
 
 
 # Dictionary mapping prompt types to their classes
