@@ -54,7 +54,7 @@ def load_dataset(dataset_name: str, split: str = "test", max_examples: int = Non
         
     elif dataset_name == "strategyqa":
         from datasets import load_dataset
-        dataset = load_dataset("allenai/strategyqa")
+        dataset = load_dataset("ChilleD/StrategyQA")
         examples = dataset[split]
         
         # Convert to list of dictionaries
