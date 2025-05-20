@@ -1,0 +1,53 @@
+[
+  {
+    "id": "e41c84af",
+    "question": "Could a person breathe under water without equipment?",
+    "answer": false,
+    "facts": [
+      "Humans need oxygen to breathe.",
+      "Oxygen in water is not accessible to human lungs."
+    ],
+    "decomposition": "What do humans need to breathe? Is that substance available to humans under water without equipment?"
+  },
+  {
+    "id": "b91728a4",
+    "question": "Could a penguin survive in a desert?",
+    "answer": false,
+    "facts": [
+      "Penguins need cold environments.",
+      "Deserts are typically hot."
+    ],
+    "decomposition": "What climate do penguins need to survive? What is the climate of a desert? Are these compatible?"
+  },
+  {
+    "id": "d59fcaa9",
+    "question": "Can most people run a marathon without training?",
+    "answer": false,
+    "facts": [
+      "A marathon is 26.2 miles long.",
+      "Running a marathon requires physical endurance.",
+      "Most people do not have the endurance to run 26.2 miles without training."
+    ],
+    "decomposition": "How long is a marathon? What physical capability is needed to run a marathon? Do most untrained people have this capability?"
+  },
+  {
+    "id": "e52b4c1d",
+    "question": "Can you grow a plant in complete darkness?",
+    "answer": false,
+    "facts": [
+      "Plants need light for photosynthesis.",
+      "Photosynthesis is required for most plants to grow."
+    ],
+    "decomposition": "What do plants need to grow? Is light one of those things? Is light available in complete darkness?"
+  },
+  {
+    "id": "a1b2c3d4",
+    "question": "Can playing video games improve hand-eye coordination?",
+    "answer": true,
+    "facts": [
+      "Video games often require quick reflexes and precise movements.",
+      "Regular practice of hand-eye coordination tasks improves that skill."
+    ],
+    "decomposition": "What skills do video games exercise? Does practicing those skills lead to improvement?"
+  }
+]

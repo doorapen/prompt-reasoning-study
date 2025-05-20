@@ -14,3 +14,4 @@ matplotlib
 seaborn
 torch
 statsmodels
+sympy

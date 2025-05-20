@@ -1,0 +1,54 @@
+[
+  {
+    "id": "c3d4acac",
+    "question": "Could a high school student be president of the United States?",
+    "answer": false,
+    "facts": [
+      "The legal age to be U.S. president is 35.",
+      "High school students typically aged between 14 and 18."
+    ],
+    "decomposition": "What is the minimum age requirement for the U.S. President? What is the typical age range of high school students? Is the minimum age requirement higher than the upper range of typical high school students' ages?"
+  },
+  {
+    "id": "dd9e430e",
+    "question": "Would a vegetarian eat a hamburger?",
+    "answer": false,
+    "facts": [
+      "Vegetarians don't eat meat.",
+      "Hamburgers contain beef.",
+      "Beef is meat."
+    ],
+    "decomposition": "What do vegetarians avoid eating? What is in a hamburger? Is the avoided food contained in a hamburger?"
+  },
+  {
+    "id": "a8f6fe1b",
+    "question": "Do the Olympics happen every year?",
+    "answer": false,
+    "facts": [
+      "The Summer Olympics are held every four years.",
+      "The Winter Olympics are held every four years."
+    ],
+    "decomposition": "How often are the Olympic Games held?"
+  },
+  {
+    "id": "7cb9a678",
+    "question": "Can you make a cake without using an oven?",
+    "answer": true,
+    "facts": [
+      "Some cakes can be made in a microwave.",
+      "No-bake cakes exist that are refrigerated instead of baked."
+    ],
+    "decomposition": "Are there ways to prepare cakes that don't involve an oven?"
+  },
+  {
+    "id": "f910def1",
+    "question": "Would a boat work on land?",
+    "answer": false,
+    "facts": [
+      "Boats are designed to float on water.",
+      "Boats rely on water for propulsion.",
+      "Land does not have water to support a boat."
+    ],
+    "decomposition": "What is a boat designed for? What does a boat need to function? Does land have what a boat needs to function?"
+  }
+]
